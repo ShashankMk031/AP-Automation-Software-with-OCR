@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 from app.models.vendor import Vendor
 from app.models.purchase_order import PurchaseOrder
+from app.models.enums import PurchaseOrderStatus
 from app.models.grn import GRN
 
 def seed_pos_and_grns():
@@ -18,14 +19,14 @@ def seed_pos_and_grns():
         print("Not enough vendors found. Please run seed_vendors.py first.")
         db.close()
         return
-
+ 
     # Seed Purchase Orders
     po_data_list = [
-        {"po_number": "PO-2023-001", "vendor_id": vendors[0].id, "amount": 150000.0, "status": "active"},
-        {"po_number": "PO-2023-002", "vendor_id": vendors[1].id, "amount": 250000.50, "status": "active"},
-        {"po_number": "PO-2023-003", "vendor_id": vendors[2].id, "amount": 75000.0, "status": "active"},
-        {"po_number": "PO-2023-004", "vendor_id": vendors[3].id, "amount": 500000.0, "status": "active"},
-        {"po_number": "PO-2023-005", "vendor_id": vendors[4].id, "amount": 320000.75, "status": "active"}
+        {"po_number": "PO-2023-001", "vendor_id": vendors[0].id, "amount": 150000.0, "status": PurchaseOrderStatus.OPEN},
+        {"po_number": "PO-2023-002", "vendor_id": vendors[1].id, "amount": 250000.50, "status": PurchaseOrderStatus.OPEN},
+        {"po_number": "PO-2023-003", "vendor_id": vendors[2].id, "amount": 75000.0, "status": PurchaseOrderStatus.OPEN},
+        {"po_number": "PO-2023-004", "vendor_id": vendors[3].id, "amount": 500000.0, "status": PurchaseOrderStatus.OPEN},
+        {"po_number": "PO-2023-005", "vendor_id": vendors[4].id, "amount": 320000.75, "status": PurchaseOrderStatus.OPEN}
     ]
 
     created_pos = []
@@ -38,8 +39,10 @@ def seed_pos_and_grns():
             created_pos.append(new_po)
             print(f"Created PO: {po_data['po_number']}")
         else:
+            po.status = po_data["status"]
+            db.add(po)
             created_pos.append(po)
-            print(f"PO already exists: {po_data['po_number']}")
+            print(f"PO already exists, updated status: {po_data['po_number']}")
             
     # Seed GRNs
     grn_data_list = [

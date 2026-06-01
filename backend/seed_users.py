@@ -7,6 +7,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 from app.models.user import User
+from app.models.enums import UserRole
 from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -17,9 +18,9 @@ def get_password_hash(password: str) -> str:
 def seed_users():
     db: Session = SessionLocal()
     users = [
-        {"name": "Admin", "email": "admin@example.com", "password": "password123", "role": "admin"},
-        {"name": "Approver", "email": "approver@example.com", "password": "password123", "role": "approver"},
-        {"name": "Finance", "email": "finance@example.com", "password": "password123", "role": "finance"}
+        {"name": "Admin", "email": "admin@example.com", "password": "password123", "role": UserRole.ADMIN},
+        {"name": "Approver", "email": "approver@example.com", "password": "password123", "role": UserRole.APPROVER},
+        {"name": "Finance", "email": "finance@example.com", "password": "password123", "role": UserRole.FINANCE}
     ]
 
     for user_data in users:
@@ -34,7 +35,10 @@ def seed_users():
             db.add(new_user)
             print(f"Created user: {user_data['email']}")
         else:
-            print(f"User already exists: {user_data['email']}")
+            # Update role to enum if it exists with string
+            user.role = user_data["role"]
+            db.add(user)
+            print(f"User already exists, updated role: {user_data['email']}")
     
     db.commit()
     db.close()

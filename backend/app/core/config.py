@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     
     SECRET_KEY: str = "your-super-secret-key-here"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 11520
+    
+    GEMINI_API_KEY: str = ""
 
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
