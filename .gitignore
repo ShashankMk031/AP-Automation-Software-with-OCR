@@ -37,3 +37,10 @@ backend/uploads/*
 # IDEs and Editors
 .vscode/
 .idea/
+
+# Frontend dependencies and builds
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.env*.local
+*.log
