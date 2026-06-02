@@ -125,3 +125,70 @@ def process_invoice_upload(db: Session, vendor_id: int, file_path: str, current_
         ocr_data=ocr_result,
         validation_errors=errors
     )
+
+def get_invoices(db: Session, search: str = None, status: InvoiceStatus = None, page: int = 1, size: int = 20):
+    query = db.query(Invoice)
+    
+    if status:
+        query = query.filter(Invoice.status == status)
+        
+    if search:
+        query = query.filter(Invoice.invoice_number.ilike(f"%{search}%"))
+        
+    total = query.count()
+    invoices = query.order_by(Invoice.created_at.desc()).offset((page - 1) * size).limit(size).all()
+    
+    return {
+        "data": invoices,
+        "total": total,
+        "page": page,
+        "size": size
+    }
+
+def get_invoice_detail(db: Session, invoice_id: int):
+    invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+    if not invoice:
+        return None
+        
+    vendor_name = invoice.vendor.name if invoice.vendor else "Unknown Vendor"
+    
+    # Audit logs
+    audit_logs = [
+        {
+            "id": log.id,
+            "action": log.action,
+            "details": log.details,
+            "actor_email": log.actor.email if log.actor else "System",
+            "timestamp": log.created_at
+        }
+        for log in invoice.audit_logs
+    ]
+    
+    # Approval history (workflow)
+    approval_history = []
+    if invoice.workflow:
+        approval_history.append({
+            "status": invoice.workflow.status.value,
+            "approver_email": invoice.workflow.approver.email if invoice.workflow.approver else None,
+            "comments": invoice.workflow.comments,
+            "actioned_at": invoice.workflow.actioned_at
+        })
+        
+    # Line items
+    line_items = [
+        {
+            "description": item.description,
+            "quantity": item.quantity,
+            "unit_price": item.unit_price,
+            "line_total": item.line_total
+        }
+        for item in invoice.line_items
+    ]
+    
+    return {
+        "invoice": invoice,
+        "vendor_name": vendor_name,
+        "line_items": line_items,
+        "approval_history": approval_history,
+        "audit_logs": sorted(audit_logs, key=lambda x: x["timestamp"], reverse=True)[:10] # Recent 10
+    }

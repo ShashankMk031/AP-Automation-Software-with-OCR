@@ -8,11 +8,12 @@ from typing import List
 from app.db.session import get_db
 from app.core.security import get_current_user, require_role
 from app.models.user import User
-from app.models.enums import UserRole
-from app.schemas.invoice import InvoiceProcessingSummary
+from app.models.enums import UserRole, InvoiceStatus
+from app.schemas.invoice import InvoiceProcessingSummary, PaginatedInvoiceResponse, InvoiceDetailResponse
 from app.schemas.po_match import POMatchRequest, POMatchResponse
 from app.schemas.approval import ApprovalActionRequest, PendingInvoiceResponse, ApprovalHistoryResponse
-from app.services.invoice_service import process_invoice_upload
+from fastapi import Query
+from app.services.invoice_service import process_invoice_upload, get_invoices, get_invoice_detail
 from app.services.po_matching_service import calculate_po_match, execute_po_match
 from app.services.approval_service import (
     submit_for_approval,
@@ -82,6 +83,20 @@ def upload_invoice(
             detail=f"Pipeline error: {str(e)}"
         )
 
+@router.get("", response_model=PaginatedInvoiceResponse)
+def get_invoices_endpoint(
+    search: str = Query(None, description="Search by invoice number"),
+    status: InvoiceStatus = Query(None, description="Filter by status"),
+    page: int = Query(1, ge=1, description="Page number"),
+    size: int = Query(20, ge=1, le=100, description="Page size"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Returns a paginated list of invoices with optional search and status filters.
+    """
+    return get_invoices(db, search=search, status=status, page=page, size=size)
+
 @router.get("/pending-approval", response_model=list[PendingInvoiceResponse])
 def get_pending_invoices_endpoint(
     db: Session = Depends(get_db),
@@ -91,6 +106,22 @@ def get_pending_invoices_endpoint(
     Returns a list of all invoices currently awaiting approval.
     """
     return get_pending_invoices(db)
+
+@router.get("/{invoice_id}", response_model=InvoiceDetailResponse)
+def get_invoice_detail_endpoint(
+    invoice_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Returns detailed information about a specific invoice.
+    """
+    detail = get_invoice_detail(db, invoice_id)
+    if not detail:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invoice not found")
+    return detail
+
+
 
 @router.post("/{invoice_id}/po-match", response_model=POMatchResponse)
 def match_purchase_order(
