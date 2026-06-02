@@ -48,7 +48,9 @@ const InvoiceDetail: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       <div className="page-header" style={{ marginBottom: 0 }}>
         <div>
-          <h1 className="page-title">Invoice {invoice.invoice_number}</h1>
+          <h1 className="page-title">
+            Invoice {invoice.invoice_number?.startsWith('PENDING_') ? <span style={{ color: 'var(--color-text-muted)', fontStyle: 'italic' }}>Not Extracted</span> : invoice.invoice_number}
+          </h1>
           <div style={{ marginTop: '0.5rem', color: 'var(--color-text-muted)', display: 'flex', gap: '1rem' }}>
             <span><Building size={16} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '4px' }}/> {vendor_name}</span>
             <span>Date: {invoice.invoice_date ? new Date(invoice.invoice_date).toLocaleDateString() : 'N/A'}</span>

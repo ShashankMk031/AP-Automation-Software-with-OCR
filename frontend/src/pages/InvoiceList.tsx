@@ -119,7 +119,13 @@ const InvoiceList: React.FC = () => {
                 invoices.map((inv) => (
                   <tr key={inv.id}>
                     <td>#{inv.id}</td>
-                    <td style={{ fontWeight: 500 }}>{inv.invoice_number}</td>
+                    <td style={{ fontWeight: 500 }}>
+                      {inv.invoice_number?.startsWith('PENDING_') ? (
+                        <span style={{ color: 'var(--color-text-muted)', fontStyle: 'italic', fontSize: '0.875rem' }}>Not Extracted</span>
+                      ) : (
+                        inv.invoice_number
+                      )}
+                    </td>
                     <td>{inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString() : 'N/A'}</td>
                     <td>{inv.total_amount ? `$${inv.total_amount.toFixed(2)}` : 'N/A'}</td>
                     <td>

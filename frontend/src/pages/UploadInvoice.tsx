@@ -16,7 +16,7 @@ const UploadInvoice: React.FC = () => {
   useEffect(() => {
     // Load active vendors
     apiClient.get('/vendors?skip=0&limit=100').then(res => {
-      setVendors(res.data.data.filter((v: any) => v.status === 'ACTIVE'));
+      setVendors(res.data.items?.filter((v: any) => v.status === 'ACTIVE') || []);
     }).catch(err => console.error(err));
   }, []);
 

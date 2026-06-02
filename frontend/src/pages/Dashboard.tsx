@@ -88,15 +88,15 @@ const Dashboard: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div>
               <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>Average Confidence</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 600 }}>{(ocrMetrics?.avg_ocr_confidence * 100).toFixed(1)}%</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 600 }}>{((ocrMetrics?.avg_ocr_confidence || 0) * 100).toFixed(1)}%</div>
             </div>
             <div>
               <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>Validation Success Rate</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 600 }}>{ocrMetrics?.validation_success_rate.toFixed(1)}%</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 600 }}>{(ocrMetrics?.validation_success_rate || 0).toFixed(1)}%</div>
             </div>
             <div>
               <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>Total Processed</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 600 }}>{ocrMetrics?.total_processed}</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 600 }}>{ocrMetrics?.total_processed || 0}</div>
             </div>
           </div>
         </div>

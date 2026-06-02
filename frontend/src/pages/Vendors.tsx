@@ -16,7 +16,7 @@ const Vendors: React.FC = () => {
     setLoading(true);
     try {
       const res = await apiClient.get(`/vendors?skip=0&limit=100${search ? `&name=${search}` : ''}`);
-      setVendors(res.data.data);
+      setVendors(res.data.items || []);
     } catch (err) {
       console.error("Failed to load vendors", err);
     } finally {

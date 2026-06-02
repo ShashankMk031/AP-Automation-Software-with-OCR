@@ -4,8 +4,8 @@ import apiClient from '../api/client';
 import { Lock, Mail, AlertCircle } from 'lucide-react';
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('admin@apauto.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -85,6 +85,28 @@ const Login: React.FC = () => {
             {loading ? 'Authenticating...' : 'Sign In'}
           </button>
         </form>
+        
+        <div style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(0,0,0,0.03)', borderRadius: 'var(--radius-md)', fontSize: '0.875rem' }}>
+          <h3 style={{ fontWeight: 600, marginBottom: '0.75rem', color: 'var(--color-text-muted)' }}>Demo Credentials</h3>
+          <div style={{ display: 'grid', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontWeight: 500 }}>Admin:</span>
+              <code style={{ background: 'white', padding: '2px 6px', borderRadius: '4px' }}>admin@example.com</code>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontWeight: 500 }}>Approver:</span>
+              <code style={{ background: 'white', padding: '2px 6px', borderRadius: '4px' }}>approver@example.com</code>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontWeight: 500 }}>Finance:</span>
+              <code style={{ background: 'white', padding: '2px 6px', borderRadius: '4px' }}>finance@example.com</code>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontWeight: 500 }}>Password:</span>
+              <code style={{ background: 'white', padding: '2px 6px', borderRadius: '4px' }}>password123</code>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

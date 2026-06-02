@@ -37,6 +37,35 @@ const Reports: React.FC = () => {
         <h1 className="page-title">Reporting & Analytics</h1>
       </div>
 
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderLeft: '4px solid var(--color-primary)' }}>
+          <div>
+            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>Total Documents</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>
+              {invoiceStatusReport.reduce((acc, curr) => acc + curr.count, 0)}
+            </div>
+          </div>
+        </div>
+        
+        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderLeft: '4px solid var(--color-info)' }}>
+          <div>
+            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>Active Vendors</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>
+              {vendorReport.length}
+            </div>
+          </div>
+        </div>
+
+        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderLeft: '4px solid var(--color-success)' }}>
+          <div>
+            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>Total Approvals</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-success)' }}>
+              {approvalReport?.total_approved || 0}
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
         
         <div className="card">
