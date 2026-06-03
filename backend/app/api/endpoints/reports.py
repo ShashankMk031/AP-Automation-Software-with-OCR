@@ -10,13 +10,17 @@ from app.schemas.report import (
     InvoiceStatusReportItem,
     VendorReportItem,
     PaginatedAuditReport,
-    PaginatedApprovalReport
+    PaginatedApprovalReport,
+    APAgingReportResponse,
+    ExceptionReportItem
 )
 from app.services.report_service import (
     get_invoice_status_report,
     get_vendor_report,
     get_audit_report,
-    get_approval_report
+    get_approval_report,
+    get_ap_aging_report,
+    get_exception_report
 )
 
 router = APIRouter()
@@ -66,3 +70,23 @@ def approval_report_endpoint(
     Returns paginated data for approved and rejected invoices, including approver details and comments.
     """
     return get_approval_report(db, page=page, size=size)
+
+@router.get("/ap-aging", response_model=APAgingReportResponse)
+def ap_aging_report_endpoint(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Returns an AP aging summary for open/approved invoices grouped by days since invoice date.
+    """
+    return get_ap_aging_report(db)
+
+@router.get("/exceptions", response_model=List[ExceptionReportItem])
+def exceptions_report_endpoint(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Returns an exception report detailing validation failures and rejections.
+    """
+    return get_exception_report(db)

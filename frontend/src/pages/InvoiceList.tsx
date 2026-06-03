@@ -127,7 +127,7 @@ const InvoiceList: React.FC = () => {
                       )}
                     </td>
                     <td>{inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString() : 'N/A'}</td>
-                    <td>{inv.total_amount ? `$${inv.total_amount.toFixed(2)}` : 'N/A'}</td>
+                    <td>{inv.total_amount != null ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(inv.total_amount) : 'N/A'}</td>
                     <td>
                       <span className={getStatusBadge(inv.status)}>
                         {inv.status.replace('_', ' ')}

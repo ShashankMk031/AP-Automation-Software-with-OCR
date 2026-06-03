@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import apiClient from '../api/client';
 import { Search, Plus, Edit2, Check, X } from 'lucide-react';
 
@@ -10,7 +10,10 @@ const Vendors: React.FC = () => {
   // Create / Edit modal state
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState({ name: '', gstin: '', contact_email: '', address: '', status: 'ACTIVE' });
+  const [formData, setFormData] = useState({ name: '', gstin: '', bank_details: '', status: 'ACTIVE' });
+  const [error, setError] = useState<string | null>(null);
+
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   const fetchVendors = async () => {
     setLoading(true);
@@ -28,8 +31,54 @@ const Vendors: React.FC = () => {
     fetchVendors();
   }, [search]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showModal) {
+        setShowModal(false);
+        setError(null);
+        return;
+      }
+      
+      if (e.key === 'Tab' && showModal) {
+        const modalContainer = nameInputRef.current?.closest('.card');
+        if (!modalContainer) return;
+        
+        const focusableElements = modalContainer.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusableElements.length === 0) return;
+        
+        const firstElement = focusableElements[0] as HTMLElement;
+        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+        
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            lastElement.focus();
+            e.preventDefault();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            firstElement.focus();
+            e.preventDefault();
+          }
+        }
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showModal]);
+
+  useEffect(() => {
+    if (showModal && nameInputRef.current) {
+      setTimeout(() => {
+        nameInputRef.current?.focus();
+      }, 50);
+    }
+  }, [showModal]);
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     try {
       if (editingId) {
         await apiClient.put(`/vendors/${editingId}`, formData);
@@ -39,19 +88,25 @@ const Vendors: React.FC = () => {
       setShowModal(false);
       fetchVendors();
     } catch (err: any) {
-      alert("Failed to save vendor: " + (err.response?.data?.detail || err.message));
+      let errMsg = err.response?.data?.detail || err.message;
+      if (Array.isArray(errMsg)) {
+        errMsg = errMsg.map((e: any) => e.msg).join(', ');
+      }
+      setError("Failed to save vendor: " + errMsg);
     }
   };
 
   const openNew = () => {
     setEditingId(null);
-    setFormData({ name: '', gstin: '', contact_email: '', address: '', status: 'ACTIVE' });
+    setFormData({ name: '', gstin: '', bank_details: '', status: 'ACTIVE' });
+    setError(null);
     setShowModal(true);
   };
 
   const openEdit = (v: any) => {
     setEditingId(v.id);
-    setFormData({ name: v.name, gstin: v.gstin || '', contact_email: v.contact_email || '', address: v.address || '', status: v.status });
+    setFormData({ name: v.name, gstin: v.gstin || '', bank_details: v.bank_details || '', status: v.status });
+    setError(null);
     setShowModal(true);
   };
 
@@ -90,7 +145,7 @@ const Vendors: React.FC = () => {
                 <th>ID</th>
                 <th>Name</th>
                 <th>GSTIN</th>
-                <th>Email</th>
+                <th>Bank Details</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -106,7 +161,7 @@ const Vendors: React.FC = () => {
                     <td>#{v.id}</td>
                     <td style={{ fontWeight: 500 }}>{v.name}</td>
                     <td>{v.gstin || '-'}</td>
-                    <td>{v.contact_email || '-'}</td>
+                    <td>{v.bank_details || '-'}</td>
                     <td>
                       <span className={v.status === 'ACTIVE' ? 'badge badge-success' : 'badge badge-default'}>
                         {v.status}
@@ -135,21 +190,22 @@ const Vendors: React.FC = () => {
             </div>
             
             <form onSubmit={handleSave}>
+              {error && (
+                <div style={{ padding: '0.75rem', background: '#fee2e2', color: '#b91c1c', borderRadius: 'var(--radius-md)', marginBottom: '1rem', fontSize: '0.875rem' }}>
+                  {error}
+                </div>
+              )}
               <div className="input-group">
                 <label className="input-label">Vendor Name *</label>
-                <input type="text" className="input-field" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
+                <input ref={nameInputRef} type="text" className="input-field" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
               </div>
               <div className="input-group">
-                <label className="input-label">GSTIN (Optional)</label>
-                <input type="text" className="input-field" value={formData.gstin} onChange={e => setFormData({...formData, gstin: e.target.value})} placeholder="e.g. 29ABCDE1234F1Z5" />
+                <label className="input-label">GSTIN *</label>
+                <input type="text" className="input-field" value={formData.gstin} onChange={e => setFormData({...formData, gstin: e.target.value.toUpperCase()})} placeholder="e.g. 29ABCDE1234F1Z5" required />
               </div>
               <div className="input-group">
-                <label className="input-label">Contact Email (Optional)</label>
-                <input type="email" className="input-field" value={formData.contact_email} onChange={e => setFormData({...formData, contact_email: e.target.value})} />
-              </div>
-              <div className="input-group">
-                <label className="input-label">Address (Optional)</label>
-                <textarea className="input-field" rows={3} value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+                <label className="input-label">Bank Details (Optional)</label>
+                <textarea className="input-field" rows={3} value={formData.bank_details} onChange={e => setFormData({...formData, bank_details: e.target.value})} placeholder="Account No, IFSC, etc." />
               </div>
               
               {editingId && (

@@ -14,7 +14,9 @@ from app.schemas.report import (
     AuditReportItem,
     PaginatedAuditReport,
     ApprovalReportItem,
-    PaginatedApprovalReport
+    PaginatedApprovalReport,
+    APAgingReportResponse,
+    ExceptionReportItem
 )
 
 def get_invoice_status_report(db: Session) -> List[InvoiceStatusReportItem]:
@@ -101,3 +103,80 @@ def get_approval_report(db: Session, page: int = 1, size: int = 20) -> Paginated
         page=page,
         size=size
     )
+
+def get_ap_aging_report(db: Session) -> APAgingReportResponse:
+    invoices = db.query(Invoice.invoice_date).filter(
+        Invoice.status.in_([
+            InvoiceStatus.VALIDATION_PASSED,
+            InvoiceStatus.PENDING_APPROVAL,
+            InvoiceStatus.APPROVED
+        ]),
+        Invoice.invoice_date.isnot(None)
+    ).all()
+    
+    res = {
+        "days_0_30": 0,
+        "days_31_60": 0,
+        "days_61_90": 0,
+        "days_90_plus": 0,
+        "total": 0
+    }
+    
+    today = datetime.now().date()
+    
+    for row in invoices:
+        inv_date = row.invoice_date
+        if not inv_date:
+            continue
+            
+        age_days = (today - inv_date.date()).days
+        
+        # Invoices can be future dated, treat age < 0 as 0
+        if age_days < 0:
+            age_days = 0
+            
+        if age_days <= 30:
+            res["days_0_30"] += 1
+        elif age_days <= 60:
+            res["days_31_60"] += 1
+        elif age_days <= 90:
+            res["days_61_90"] += 1
+        else:
+            res["days_90_plus"] += 1
+            
+        res["total"] += 1
+        
+    return APAgingReportResponse(**res)
+
+def get_exception_report(db: Session) -> List[ExceptionReportItem]:
+    invoices = db.query(Invoice).filter(
+        Invoice.status.in_([
+            InvoiceStatus.VALIDATION_FAILED,
+            InvoiceStatus.REJECTED
+        ])
+    ).all()
+    
+    results = []
+    for inv in invoices:
+        failure_reason = None
+        rejection_comments = None
+        
+        if inv.status == InvoiceStatus.VALIDATION_FAILED:
+            for log in sorted(inv.audit_logs, key=lambda x: x.timestamp, reverse=True):
+                if log.action in ('VALIDATION_FAILED', 'OCR_FAILED', 'DUPLICATE_DETECTED'):
+                    failure_reason = log.details
+                    break
+        elif inv.status == InvoiceStatus.REJECTED:
+            if inv.workflow:
+                rejection_comments = inv.workflow.comments
+                
+        results.append(ExceptionReportItem(
+            invoice_number=inv.invoice_number,
+            vendor_name=inv.vendor.name if inv.vendor else "Unknown",
+            status=inv.status.value,
+            date=inv.invoice_date or inv.created_at,
+            failure_reason=failure_reason,
+            rejection_comments=rejection_comments
+        ))
+    
+    return results

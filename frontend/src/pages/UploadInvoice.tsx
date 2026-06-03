@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
 import { Upload, FileText, CheckCircle, AlertTriangle } from 'lucide-react';
@@ -7,11 +7,14 @@ const UploadInvoice: React.FC = () => {
   const [vendors, setVendors] = useState<any[]>([]);
   const [vendorId, setVendorId] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Load active vendors
@@ -23,6 +26,30 @@ const UploadInvoice: React.FC = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const droppedFile = e.dataTransfer.files[0];
+      const ext = droppedFile.name.split('.').pop()?.toLowerCase();
+      if (['pdf', 'png', 'jpg', 'jpeg'].includes(ext || '')) {
+        setFile(droppedFile);
+      } else {
+        setError('Unsupported file type. Please upload a PDF, PNG, JPG, or JPEG file.');
+      }
     }
   };
 
@@ -79,22 +106,51 @@ const UploadInvoice: React.FC = () => {
 
             <div className="input-group" style={{ marginTop: '1.5rem' }}>
               <label className="input-label">Invoice File (PDF/Image)</label>
-              <div style={{ 
-                border: '2px dashed var(--color-border)', 
-                borderRadius: 'var(--radius-md)', 
-                padding: '2rem',
-                textAlign: 'center',
-                background: 'var(--color-bg-base)',
-                cursor: 'pointer'
-              }}>
-                <Upload size={32} style={{ color: 'var(--color-text-muted)', marginBottom: '1rem' }} />
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                style={{ 
+                  border: `2px dashed ${isDragging ? 'var(--color-primary)' : 'var(--color-border)'}`, 
+                  borderRadius: 'var(--radius-md)', 
+                  padding: '2rem',
+                  textAlign: 'center',
+                  background: isDragging ? '#e6f0fa' : 'var(--color-bg-base)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease-in-out'
+                }}
+              >
+                <Upload size={32} style={{ color: isDragging ? 'var(--color-primary)' : 'var(--color-text-muted)', marginBottom: '1rem' }} />
                 <div>
-                  <input type="file" id="file" onChange={handleFileChange} accept=".pdf,.png,.jpg,.jpeg" style={{ display: 'none' }} />
-                  <label htmlFor="file" className="btn btn-outline" style={{ display: 'inline-flex' }}>
-                    Browse Files
-                  </label>
+                  {isDragging ? (
+                    <div style={{ fontWeight: 600, color: 'var(--color-primary)', fontSize: '1.125rem', marginBottom: '0.5rem' }}>Drop Invoice Here</div>
+                  ) : (
+                    <>
+                      <input 
+                        type="file" 
+                        id="file" 
+                        ref={fileInputRef}
+                        onChange={handleFileChange} 
+                        accept=".pdf,.png,.jpg,.jpeg" 
+                        style={{ display: 'none' }} 
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <button 
+                        type="button" 
+                        className="btn btn-outline" 
+                        style={{ display: 'inline-flex' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          fileInputRef.current?.click();
+                        }}
+                      >
+                        Browse Files
+                      </button>
+                    </>
+                  )}
                 </div>
-                {file && <div style={{ marginTop: '1rem', fontWeight: 500 }}>{file.name}</div>}
+                {file && !isDragging && <div style={{ marginTop: '1rem', fontWeight: 500 }}>{file.name}</div>}
               </div>
             </div>
 
@@ -129,8 +185,8 @@ const UploadInvoice: React.FC = () => {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.875rem' }}>
                     <div><strong>Inv #:</strong> {result.ocr_data.invoice_number}</div>
                     <div><strong>Date:</strong> {result.ocr_data.invoice_date}</div>
-                    <div><strong>Total:</strong> ${result.ocr_data.total_amount}</div>
-                    <div><strong>GST:</strong> ${result.ocr_data.gst_amount}</div>
+                    <div><strong>Total:</strong> {result.ocr_data.total_amount != null ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(result.ocr_data.total_amount) : 'N/A'}</div>
+                    <div><strong>GST:</strong> {result.ocr_data.gst_amount != null ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(result.ocr_data.gst_amount) : 'N/A'}</div>
                   </div>
                 </div>
               )}
@@ -146,9 +202,30 @@ const UploadInvoice: React.FC = () => {
                 </div>
               )}
 
-              <button className="btn btn-outline" style={{ marginTop: '1rem' }} onClick={() => navigate(`/invoices/${result.invoice_id}`)}>
-                View Full Details
-              </button>
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button 
+                  autoFocus
+                  className="btn btn-primary" 
+                  onClick={() => {
+                    setFile(null);
+                    setResult(null);
+                    setError('');
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setFile(null);
+                      setResult(null);
+                      setError('');
+                    }
+                  }}
+                >
+                  Continue Processing
+                </button>
+                <button className="btn btn-outline" onClick={() => navigate(`/invoices/${result.invoice_id}`)}>
+                  View Full Details
+                </button>
+              </div>
             </div>
           </div>
         )}

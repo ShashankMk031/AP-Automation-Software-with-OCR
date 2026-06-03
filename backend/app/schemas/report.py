@@ -39,3 +39,18 @@ class PaginatedApprovalReport(BaseModel):
     total: int
     page: int
     size: int
+
+class APAgingReportResponse(BaseModel):
+    days_0_30: int
+    days_31_60: int
+    days_61_90: int
+    days_90_plus: int
+    total: int
+
+class ExceptionReportItem(BaseModel):
+    invoice_number: str
+    vendor_name: str
+    status: str
+    date: Optional[datetime] = None
+    failure_reason: Optional[str] = None
+    rejection_comments: Optional[str] = None

@@ -44,3 +44,8 @@ frontend/dist/
 frontend/dist-ssr/
 frontend/.env*.local
 *.log
+
+My_notes.md
+docs/
+PROJECT_REPORT.md
+DEPLOYEMENT_CHECKLIST.md

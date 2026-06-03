@@ -6,19 +6,22 @@ const Dashboard: React.FC = () => {
   const [summary, setSummary] = useState<any>(null);
   const [ocrMetrics, setOcrMetrics] = useState<any>(null);
   const [recent, setRecent] = useState<any[]>([]);
+  const [apAging, setApAging] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const [sumRes, ocrRes, recRes] = await Promise.all([
+        const [sumRes, ocrRes, recRes, apAgingRes] = await Promise.all([
           apiClient.get('/dashboard/summary'),
           apiClient.get('/dashboard/ocr-metrics'),
-          apiClient.get('/dashboard/recent-activity')
+          apiClient.get('/dashboard/recent-activity'),
+          apiClient.get('/reports/ap-aging')
         ]);
         setSummary(sumRes.data);
         setOcrMetrics(ocrRes.data);
         setRecent(recRes.data);
+        setApAging(apAgingRes.data);
       } catch (err) {
         console.error("Failed to load dashboard", err);
       } finally {
@@ -55,6 +58,16 @@ const Dashboard: React.FC = () => {
           <div>
             <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>Approved</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{summary?.approved || 0}</div>
+          </div>
+        </div>
+
+        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ padding: '1rem', background: 'var(--color-warning)', color: 'white', borderRadius: 'var(--radius-lg)' }}>
+            <Layers size={24} />
+          </div>
+          <div>
+            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>Total Open Invoices</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{apAging?.total || 0}</div>
           </div>
         </div>
 

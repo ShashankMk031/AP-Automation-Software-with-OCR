@@ -46,11 +46,14 @@ body {
 /* Layout */
 .app-container {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .sidebar {
   width: 260px;
+  height: 100%;
+  overflow-y: auto;
   background-color: var(--color-bg-sidebar);
   color: var(--color-text-inverse);
   display: flex;
@@ -94,6 +97,7 @@ body {
 
 .main-content {
   flex: 1;
+  height: 100%;
   padding: 2rem;
   overflow-y: auto;
   background: var(--color-bg-base);
@@ -229,4 +233,27 @@ tr:last-child td {
   font-size: 1.875rem;
   font-weight: 700;
   color: var(--color-text-main);
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal-content {
+  background: var(--color-bg-card);
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 500px;
+  box-shadow: var(--shadow-lg);
 }
