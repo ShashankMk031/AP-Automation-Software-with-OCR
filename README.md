@@ -136,37 +136,6 @@ The repository includes a seeding script (`backend/seed_users.py`) that generate
 * **Approver:** `approver@example.com` / `password123`
 * **Finance:** `finance@example.com` / `password123`
 
----
-
-## Screenshots
-
-### Login & Authentication
-![Login Page](screenshots/LoginPage.png)
-
-### Dashboard
-![Dashboard](screenshots/Dashboard.png)
-
-### Upload
-![Upload Invoices](screenshots/UploadInvoices.png)
-![Upload Invoices Error](screenshots/UploadInvoicesError.png)
-
-### Invoice Detail & List
-![Invoices List](screenshots/Invoices.png)
-![Individual Invoice](screenshots/IndividualInvoice.png)
-
-### PO Matching
-![PO Mismatch](screenshots/POmismatch.png)
-
-### Approval Queue
-![Approval Queue](screenshots/ApprovalQueue.png)
-
-### Vendors
-![Vendors](screenshots/Vendors.png)
-
-### Reports
-![Reports & Analytics](screenshots/ReportsAnalytics.png)
-
----
 
 ## Module Coverage Summary
 
